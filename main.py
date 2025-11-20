@@ -1,31 +1,97 @@
+"""
+TradingAgents - AI智能交易代理系统主入口文件
+==============================================
+
+这个文件是TradingAgents项目的主入口点，演示如何使用多智能体交易系统
+进行股票投资分析和决策制定。
+
+主要功能：
+- 初始化AI交易代理系统
+- 配置深度思考和快速思考模型
+- 设置数据供应商（股票数据、技术指标、基本面数据、新闻数据）
+- 执行股票投资决策分析
+- 支持学习和反思机制
+
+使用示例：
+    python main.py
+
+作者：TradingAgents团队
+版本：1.0.0
+"""
+
+# 导入核心交易图模块和默认配置
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.default_config import DEFAULT_CONFIG
 
+# 导入环境变量加载工具
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# ==============================================================================
+# 环境配置和初始化
+# ==============================================================================
+
+# 从.env文件加载环境变量（如API密钥等配置）
 load_dotenv()
 
-# Create a custom config
-config = DEFAULT_CONFIG.copy()
-config["deep_think_llm"] = "gpt-4o-mini"  # Use a different model
-config["quick_think_llm"] = "gpt-4o-mini"  # Use a different model
-config["max_debate_rounds"] = 1  # Increase debate rounds
+# ==============================================================================
+# 系统配置
+# ==============================================================================
 
-# Configure data vendors (default uses yfinance and alpha_vantage)
+# 创建自定义配置，基于默认配置进行修改
+config = DEFAULT_CONFIG.copy()
+
+# 配置AI模型
+config["deep_think_llm"] = "gpt-4o-mini"     # 深度思考模型：用于复杂分析和决策
+config["quick_think_llm"] = "gpt-4o-mini"    # 快速思考模型：用于快速响应和处理
+config["max_debate_rounds"] = 1              # 最大辩论轮数：控制智能体间的讨论深度
+
+# ==============================================================================
+# 数据供应商配置
+# ==============================================================================
+
+# 配置各种数据源的供应商，支持多种选择以实现数据冗余和优化
 config["data_vendors"] = {
-    "core_stock_apis": "yfinance",           # Options: yfinance, alpha_vantage, local
-    "technical_indicators": "yfinance",      # Options: yfinance, alpha_vantage, local
-    "fundamental_data": "alpha_vantage",     # Options: openai, alpha_vantage, local
-    "news_data": "alpha_vantage",            # Options: openai, alpha_vantage, google, local
+    "core_stock_apis": "yfinance",           # 核心股票API：选择yfinance（免费、可靠）
+                                            # 其他选项：alpha_vantage（功能全但有限制）、local（本地数据）
+
+    "technical_indicators": "yfinance",      # 技术指标数据：选择yfinance
+                                            # 其他选项：alpha_vantage、local
+
+    "fundamental_data": "alpha_vantage",     # 基本面数据：选择alpha_vantage（财务数据更全面）
+                                            # 其他选项：openai（AI分析）、local（本地数据）
+
+    "news_data": "alpha_vantage",            # 新闻数据：选择alpha_vantage
+                                            # 其他选项：openai（AI处理）、google（谷歌新闻）、local（本地数据）
 }
 
-# Initialize with custom config
+# ==============================================================================
+# 系统初始化
+# ==============================================================================
+
+# 使用自定义配置初始化交易代理系统
+# debug=True 启用调试模式，会输出详细的执行过程信息
 ta = TradingAgentsGraph(debug=True, config=config)
 
-# forward propagate
+# ==============================================================================
+# 执行投资决策分析
+# ==============================================================================
+
+# 执行前向传播，即完整的投资决策流程
+# 参数说明：
+# - "NVDA": 股票代码（英伟达公司）
+# - "2024-05-10": 分析日期
+# 返回值：
+# - _: 中间状态信息（调试用）
+# - decision: 最终投资决策（买入/卖出/持有及理由）
 _, decision = ta.propagate("NVDA", "2024-05-10")
+
+# 打印最终决策结果
 print(decision)
 
-# Memorize mistakes and reflect
-# ta.reflect_and_remember(1000) # parameter is the position returns
+# ==============================================================================
+# 学习和反思机制（可选）
+# ==============================================================================
+
+# 系统可以从投资结果中学习和反思，不断改进决策质量
+# 这会分析历史投资的表现，识别成功和失败的模式
+# ta.reflect_and_remember(1000)  # 参数是投资回报率，正值表示盈利，负值表示亏损

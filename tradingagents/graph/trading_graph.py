@@ -1,4 +1,44 @@
-# TradingAgents/graph/trading_graph.py
+"""
+TradingAgents 图形处理工作流引擎核心模块
+======================================
+
+这个模块是TradingAgents系统的核心决策流程引擎，基于LangGraph框架构建了
+一个复杂的多智能体协作工作流。该模块通过状态图、条件路由和智能体
+协调机制，将市场分析、投资辩论、风险评估和交易执行有机地整合在
+一个统一的决策流程中。
+
+核心功能：
+- 多智能体工作流编排和管理
+- 基于LangGraph的状态图决策流程
+- 智能体协作和辩论机制
+- 向量记忆学习和反思优化
+- 条件路由和动态工作流控制
+
+设计特点：
+- 模块化架构：高度解耦的组件设计，便于维护和扩展
+- 状态驱动：基于统一状态模型的工作流管理
+- 智能路由：根据状态和结果动态选择执行路径
+- 学习机制：集成反思学习实现决策质量持续优化
+- 容错设计：完善的错误处理和故障转移机制
+
+使用示例：
+    # 创建交易图实例
+    graph = TradingAgentsGraph(
+        selected_analysts=["market", "news", "fundamentals"],
+        debug=False,
+        config=config
+    )
+
+    # 执行交易分析
+    final_state, decision = graph.propagate("AAPL", "2024-12-20")
+
+作者：TradingAgents团队
+版本：1.0.0
+"""
+
+# ==============================================================================
+# 导入必要的库和模块
+# ==============================================================================
 
 import os
 from pathlib import Path
@@ -6,45 +46,67 @@ import json
 from datetime import date
 from typing import Dict, Any, Tuple, List, Optional
 
+# LangChain LLM提供商支持
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+# LangGraph核心组件
 from langgraph.prebuilt import ToolNode
 
+# TradingAgents智能体系统
 from tradingagents.agents import *
 from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.agents.utils.memory import FinancialSituationMemory
 from tradingagents.agents.utils.agent_states import (
-    AgentState,
-    InvestDebateState,
-    RiskDebateState,
+    AgentState,           # 主状态类
+    InvestDebateState,    # 投资辩论状态
+    RiskDebateState,      # 风险辩论状态
 )
 from tradingagents.dataflows.config import set_config
 
-# Import the new abstract tool methods from agent_utils
+# 智能体工具方法 - 统一的数据访问接口
 from tradingagents.agents.utils.agent_utils import (
-    get_stock_data,
-    get_indicators,
-    get_fundamentals,
-    get_balance_sheet,
-    get_cashflow,
-    get_income_statement,
-    get_news,
-    get_insider_sentiment,
-    get_insider_transactions,
-    get_global_news
+    get_stock_data,           # 股票价格数据获取
+    get_indicators,           # 技术指标获取
+    get_fundamentals,         # 基本面数据获取
+    get_balance_sheet,        # 资产负债表获取
+    get_cashflow,             # 现金流量表获取
+    get_income_statement,     # 损益表获取
+    get_news,                 # 新闻数据获取
+    get_insider_sentiment,    # 内部人情绪获取
+    get_insider_transactions, # 内部人交易获取
+    get_global_news           # 全球新闻获取
 )
 
-from .conditional_logic import ConditionalLogic
-from .setup import GraphSetup
-from .propagation import Propagator
-from .reflection import Reflector
-from .signal_processing import SignalProcessor
+# 图形处理核心组件
+from .conditional_logic import ConditionalLogic  # 条件路由器
+from .setup import GraphSetup                    # 图构建器
+from .propagation import Propagator              # 状态管理器
+from .reflection import Reflector                # 学习优化器
+from .signal_processing import SignalProcessor    # 决策提取器
 
+# ==============================================================================
+# TradingAgentsGraph 主图编排器类
+# ==============================================================================
 
 class TradingAgentsGraph:
-    """Main class that orchestrates the trading agents framework."""
+    """
+    TradingAgents图编排器主类
+
+    这是整个智能交易代理系统的核心控制器，负责：
+    1. 初始化所有组件和配置
+    2. 构建和管理LangGraph工作流
+    3. 协调智能体间的协作和状态传递
+    4. 提供执行接口和学习机制
+
+    主要功能：
+    - 多LLM提供商支持（OpenAI、Anthropic、Google等）
+    - 智能体记忆管理和学习优化
+    - 工具节点动态创建和管理
+    - 完整的工作流执行和状态监控
+    - 反思学习和经验积累机制
+    """
 
     def __init__(
         self,

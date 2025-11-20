@@ -1,3 +1,36 @@
+"""
+TradingAgents CLI 命令行界面主模块
+=================================
+
+这个模块是TradingAgents智能交易代理系统的命令行界面入口，提供
+用户友好的交互式体验，支持实时监控智能体工作进度和决策过程。
+
+主要功能：
+- 交互式用户配置收集（股票代码、分析日期、分析师团队等）
+- 实时显示智能体工作状态和进度
+- 动态展示分析报告和决策结果
+- 支持多种LLM提供商和模型选择
+- 美观的终端界面和状态指示器
+
+技术特性：
+- 基于Rich库的现代化终端界面
+- 实时数据更新和状态监控
+- 消息缓冲和日志管理
+- 多线程安全的界面更新
+- 完整的错误处理和用户提示
+
+使用示例：
+    python -m cli.main
+    python cli/main.py analyze
+
+作者：TradingAgents团队
+版本：1.0.0
+"""
+
+# ==============================================================================
+# 导入必要的库和模块
+# ==============================================================================
+
 from typing import Optional
 import datetime
 import typer
@@ -6,8 +39,10 @@ from functools import wraps
 from rich.console import Console
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# 加载环境变量（API密钥等配置信息）
 load_dotenv()
+
+# Rich库组件 - 用于创建美观的终端界面
 from rich.panel import Panel
 from rich.spinner import Spinner
 from rich.live import Live
@@ -24,30 +59,74 @@ from rich import box
 from rich.align import Align
 from rich.rule import Rule
 
+# TradingAgents核心模块
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.default_config import DEFAULT_CONFIG
 from cli.models import AnalystType
 from cli.utils import *
 
+# 初始化Rich控制台对象
 console = Console()
 
+# ==============================================================================
+# Typer CLI应用配置
+# ==============================================================================
+
+# 创建Typer应用实例，提供命令行界面框架
 app = typer.Typer(
     name="TradingAgents",
-    help="TradingAgents CLI: Multi-Agents LLM Financial Trading Framework",
-    add_completion=True,  # Enable shell completion
+    help="TradingAgents CLI: Multi-Agents LLM Financial Trading Framework - 多智能体LLM金融交易框架",
+    add_completion=True,  # 启用shell自动补全功能
 )
 
+# ==============================================================================
+# 消息缓冲区类 - 管理智能体通信和状态
+# ==============================================================================
 
-# Create a deque to store recent messages with a maximum length
 class MessageBuffer:
+    """
+    消息缓冲区类
+
+    负责管理所有智能体的消息、工具调用、状态和报告。
+    使用双端队列(deque)实现高效的消息存储和检索，支持线程安全操作。
+
+    主要功能：
+    - 消息队列管理（自动限制长度防止内存溢出）
+    - 工具调用记录和追踪
+    - 智能体状态实时更新
+    - 分析报告的收集和组织
+    - 最终报告的整合和展示
+
+    属性说明：
+    - messages: 存储所有智能体消息的队列
+    - tool_calls: 存储工具调用记录的队列
+    - agent_status: 智能体状态字典（pending/in_progress/completed/error）
+    - report_sections: 各个分析报告段落的存储
+    """
+
     def __init__(self, max_length=100):
+        """
+        初始化消息缓冲区
+
+        参数：
+        - max_length: 队列最大长度，防止内存溢出，默认100条消息
+        """
+        # 消息队列 - 存储智能体间的通信消息
         self.messages = deque(maxlen=max_length)
+
+        # 工具调用队列 - 记录所有数据获取和处理操作
         self.tool_calls = deque(maxlen=max_length)
+
+        # 当前正在生成的报告（实时更新）
         self.current_report = None
-        self.final_report = None  # Store the complete final report
+
+        # 最终完整报告（包含所有分析结果）
+        self.final_report = None
+
+        # 智能体状态映射 - 追踪每个智能体的当前状态
         self.agent_status = {
-            # Analyst Team
-            "Market Analyst": "pending",
+            # 分析师团队 - 负责不同维度的市场分析
+            "Market Analyst": "pending",           # 市场分析师 - 技术分析和趋势预测
             "Social Analyst": "pending",
             "News Analyst": "pending",
             "Fundamentals Analyst": "pending",

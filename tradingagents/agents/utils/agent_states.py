@@ -1,3 +1,37 @@
+"""
+TradingAgents 智能体状态管理模块
+=================================
+
+这个模块定义了整个TradingAgents智能体系统的状态数据结构。
+状态管理是多智能体协作的核心，确保智能体间的信息传递和数据一致性。
+
+核心设计理念：
+- 类型安全：使用TypedDict确保状态字段的类型安全
+- 清晰注解：每个状态字段都有详细的类型注解和中文说明
+- 阶段隔离：不同决策阶段的状态相互独立，避免冲突
+- 历史追踪：维护完整的对话历史和决策过程记录
+
+状态分类：
+1. InvestDebateState - 投资研究辩论状态
+2. RiskDebateState - 风险评估辩论状态
+3. AgentState - 主状态类，包含所有工作流状态
+
+使用示例：
+    state = AgentState(
+        company_of_interest="AAPL",
+        trade_date="2024-12-20",
+        market_report="技术分析报告内容",
+        investment_debate_state=InvestDebateState(...)
+    )
+
+作者：TradingAgents团队
+版本：1.0.0
+"""
+
+# ==============================================================================
+# 导入必要的库和模块
+# ==============================================================================
+
 from typing import Annotated, Sequence
 from datetime import date, timedelta, datetime
 from typing_extensions import TypedDict, Optional
@@ -6,71 +40,223 @@ from tradingagents.agents import *
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import END, StateGraph, START, MessagesState
 
+# ==============================================================================
+# 投资研究辩论状态类
+# ==============================================================================
 
-# Researcher team state
 class InvestDebateState(TypedDict):
+    """
+    投资研究辩论状态类
+
+    管理看涨和看跌研究员之间的辩论过程，维护辩论历史、
+    当前响应和最终裁决结果。这是投资决策阶段的核心状态管理。
+
+    主要功能：
+    - 维护看涨/看跌双方的辩论历史
+    - 记录当前轮次的响应内容
+    - 追踪辩论轮数和进展
+    - 存储研究经理的最终决策
+
+    使用场景：
+    看涨研究员和看跌研究员进行多轮辩论时，
+    每轮的发言内容、历史记录和最终判断都存储在此状态中。
+    """
+
+    # 看涨方的辩论历史 - 记录看涨研究员的所有发言和论据
     bull_history: Annotated[
-        str, "Bullish Conversation history"
-    ]  # Bullish Conversation history
+        str, "看涨方辩论历史 - 记录看涨研究员的所有发言内容和支持理由"
+    ]
+
+    # 看跌方的辩论历史 - 记录看跌研究员的所有发言和风险警示
     bear_history: Annotated[
-        str, "Bearish Conversation history"
-    ]  # Bullish Conversation history
-    history: Annotated[str, "Conversation history"]  # Conversation history
-    current_response: Annotated[str, "Latest response"]  # Last response
-    judge_decision: Annotated[str, "Final judge decision"]  # Last response
-    count: Annotated[int, "Length of the current conversation"]  # Conversation length
+        str, "看跌方辩论历史 - 记录看跌研究员的所有发言内容和风险分析"
+    ]
 
+    # 完整的辩论历史 - 包含双方的所有发言，按时间顺序排列
+    history: Annotated[str, "完整辩论历史 - 按时间顺序记录双方的所有发言内容"]
 
-# Risk management team state
+    # 当前轮次的最新响应 - 正在进行的当前发言内容
+    current_response: Annotated[str, "当前最新响应 - 本轮辩论的最新发言内容"]
+
+    # 研究经理的最终决策 - 基于辩论结果做出的投资判断
+    judge_decision: Annotated[str, "最终裁决 - 研究经理综合辩论后做出的投资决策"]
+
+    # 辩论轮次计数器 - 跟踪当前进行了多少轮辩论
+    count: Annotated[int, "辩论轮数 - 当前已进行的辩论轮次计数"]
+
+# ==============================================================================
+# 风险评估辩论状态类
+# ==============================================================================
+
 class RiskDebateState(TypedDict):
-    risky_history: Annotated[
-        str, "Risky Agent's Conversation history"
-    ]  # Conversation history
-    safe_history: Annotated[
-        str, "Safe Agent's Conversation history"
-    ]  # Conversation history
-    neutral_history: Annotated[
-        str, "Neutral Agent's Conversation history"
-    ]  # Conversation history
-    history: Annotated[str, "Conversation history"]  # Conversation history
-    latest_speaker: Annotated[str, "Analyst that spoke last"]
-    current_risky_response: Annotated[
-        str, "Latest response by the risky analyst"
-    ]  # Last response
-    current_safe_response: Annotated[
-        str, "Latest response by the safe analyst"
-    ]  # Last response
-    current_neutral_response: Annotated[
-        str, "Latest response by the neutral analyst"
-    ]  # Last response
-    judge_decision: Annotated[str, "Judge's decision"]
-    count: Annotated[int, "Length of the current conversation"]  # Conversation length
+    """
+    风险评估辩论状态类
 
+    管理激进、保守、中立三方风险评估师之间的辩论过程，
+    维护各方的风险观点和最终的风险调整决策。
+
+    主要功能：
+    - 维护三方风险评估师的辩论历史
+    - 记录各方对风险的不同观点
+    - 追踪发言顺序和轮换机制
+    - 存储风险经理的最终风险判断
+
+    辩论角色：
+    - 激进风险师：追求高收益，接受高风险
+    - 保守风险师：重视安全边际，控制风险
+    - 中立风险师：平衡风险和收益
+
+    使用场景：
+    交易员制定交易提案后，三方风险评估师从不同角度
+    评估风险，并进行辩论讨论。
+    """
+
+    # 激进风险师的辩论历史 - 记录激进方的观点和论据
+    risky_history: Annotated[
+        str, "激进风险师历史 - 记录激进风险师的高风险偏好观点和论据"
+    ]
+
+    # 保守风险师的辩论历史 - 记录保守方的观点和风险警示
+    safe_history: Annotated[
+        str, "保守风险师历史 - 记录保守风险师的风险规避观点和警示"
+    ]
+
+    # 中立风险师的辩论历史 - 记录中立方的平衡观点
+    neutral_history: Annotated[
+        str, "中立风险师历史 - 记录中立风险师的平衡风险收益观点"
+    ]
+
+    # 完整的风险辩论历史 - 包含三方的所有发言
+    history: Annotated[str, "完整辩论历史 - 按时间顺序记录三方风险评估的所有发言"]
+
+    # 最新发言者标识 - 记录上一次发言的是哪个风险师
+    latest_speaker: Annotated[str, "最新发言者 - 上一次发言的风险师类型标识"]
+
+    # 激进风险师的当前响应 - 本轮激进风险师的最新发言
+    current_risky_response: Annotated[
+        str, "激进风险师当前响应 - 激进风险师在本轮辩论中的最新发言内容"
+    ]
+
+    # 保守风险师的当前响应 - 本轮保守风险师的最新发言
+    current_safe_response: Annotated[
+        str, "保守风险师当前响应 - 保守风险师在本轮辩论中的最新发言内容"
+    ]
+
+    # 中立风险师的当前响应 - 本轮中立风险师的最新发言
+    current_neutral_response: Annotated[
+        str, "中立风险师当前响应 - 中立风险师在本轮辩论中的最新发言内容"
+    ]
+
+    # 风险经理的最终决策 - 基于三方辩论做出的风险判断
+    judge_decision: Annotated[str, "风险经理裁决 - 风险经理综合三方观点后的最终风险决策"]
+
+    # 风险辩论轮次计数器 - 跟踪风险评估进行了多少轮讨论
+    count: Annotated[int, "辩论轮数 - 风险评估辩论的轮次计数"]
+
+# ==============================================================================
+# 主智能体状态类
+# ==============================================================================
 
 class AgentState(MessagesState):
-    company_of_interest: Annotated[str, "Company that we are interested in trading"]
-    trade_date: Annotated[str, "What date we are trading at"]
+    """
+    主智能体状态类
 
-    sender: Annotated[str, "Agent that sent this message"]
+    这是TradingAgents系统的核心状态类，继承自LangGraph的MessagesState，
+    包含了整个交易决策流程中的所有状态信息。
 
-    # research step
-    market_report: Annotated[str, "Report from the Market Analyst"]
-    sentiment_report: Annotated[str, "Report from the Social Media Analyst"]
+    状态分类：
+    1. 基础信息：公司、日期、发送者等元数据
+    2. 分析报告：四个分析师的专业分析结果
+    3. 投资研究：研究员辩论和投资计划
+    4. 交易执行：交易员的具体交易提案
+    5. 风险管理：风险评估和最终交易决策
+
+    数据流向：
+    分析师报告 → 研究员辩论 → 投资计划 → 交易提案 → 风险评估 → 最终决策
+
+    使用说明：
+    状态在智能体间按顺序传递，每个智能体读取相关状态信息，
+    处理后更新自己的状态字段，然后传递给下一个智能体。
+    """
+
+    # ========================================================================
+    # 基础信息字段
+    # ========================================================================
+
+    # 目标交易公司 - 当前分析的公司股票代码
+    company_of_interest: Annotated[
+        str, "目标交易公司 - 当前进行投资分析的公司股票代码（如AAPL、NVDA等）"
+    ]
+
+    # 交易日期 - 执行投资分析的具体日期
+    trade_date: Annotated[
+        str, "交易日期 - 进行投资分析和决策的目标日期（格式：YYYY-MM-DD）"
+    ]
+
+    # 消息发送者标识 - 标识当前状态是由哪个智能体发送的
+    sender: Annotated[
+        str, "消息发送者 - 标识当前状态消息的发送智能体（用于消息路由和追踪）"
+    ]
+
+    # ========================================================================
+    # 分析师团队报告字段（第一阶段输出）
+    # ========================================================================
+
+    # 市场技术分析报告 - 市场分析师的技术分析结果
+    market_report: Annotated[
+        str, "市场分析报告 - 市场技术分析师提供的价格趋势、技术指标分析报告"
+    ]
+
+    # 社交媒体情绪报告 - 社交媒体分析师的情绪分析结果
+    sentiment_report: Annotated[
+        str, "情绪分析报告 - 社交媒体分析师提供的市场情绪、舆情分析报告"
+    ]
+
+    # 新闻分析报告 - 新闻分析师的新闻影响评估结果
     news_report: Annotated[
-        str, "Report from the News Researcher of current world affairs"
+        str, "新闻分析报告 - 新闻分析师提供的宏观经济新闻、行业动态影响分析报告"
     ]
-    fundamentals_report: Annotated[str, "Report from the Fundamentals Researcher"]
 
-    # researcher team discussion step
+    # 基本面分析报告 - 基本面分析师的财务分析结果
+    fundamentals_report: Annotated[
+        str, "基本面分析报告 - 基本面分析师提供的公司财务状况、估值分析报告"
+    ]
+
+    # ========================================================================
+    # 投资研究阶段字段（第二阶段输出）
+    # ========================================================================
+
+    # 投资辩论状态 - 看涨/看跌研究员辩论的状态信息
     investment_debate_state: Annotated[
-        InvestDebateState, "Current state of the debate on if to invest or not"
+        InvestDebateState,
+        "投资辩论状态 - 看涨和看跌研究员辩论的完整状态信息，包含辩论历史和过程"
     ]
-    investment_plan: Annotated[str, "Plan generated by the Analyst"]
 
-    trader_investment_plan: Annotated[str, "Plan generated by the Trader"]
+    # 投资计划 - 研究经理基于辩论结果制定的投资计划
+    investment_plan: Annotated[
+        str, "投资计划 - 研究经理综合研究员辩论后制定的具体投资执行计划和建议"
+    ]
 
-    # risk management team discussion step
+    # ========================================================================
+    # 交易执行阶段字段（第三阶段输出）
+    # ========================================================================
+
+    # 交易员投资计划 - 交易员基于研究计划制定的具体交易提案
+    trader_investment_plan: Annotated[
+        str, "交易员投资计划 - 交易员基于投资计划制定的具体交易提案和执行策略"
+    ]
+
+    # ========================================================================
+    # 风险管理阶段字段（第四阶段输出）
+    # ========================================================================
+
+    # 风险评估辩论状态 - 三方风险评估师辩论的状态信息
     risk_debate_state: Annotated[
-        RiskDebateState, "Current state of the debate on evaluating risk"
+        RiskDebateState,
+        "风险评估辩论状态 - 激进、保守、中立三方风险评估师辩论的完整状态信息"
     ]
-    final_trade_decision: Annotated[str, "Final decision made by the Risk Analysts"]
+
+    # 最终交易决策 - 风险经理做出的最终风险调整后交易决策
+    final_trade_decision: Annotated[
+        str, "最终交易决策 - 风险经理综合风险评估后做出的最终交易执行决策（买入/持有/卖出）"
+    ]
