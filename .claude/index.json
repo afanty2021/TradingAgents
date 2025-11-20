@@ -1,0 +1,290 @@
+{
+  "timestamp": "2024-12-20T00:00:00Z",
+  "project_name": "TradingAgents",
+  "project_root": "/Users/berton/Github/tradingagents",
+  "scan_coverage": {
+    "total_files": 78,
+    "scanned_files": 35,
+    "coverage_percentage": 44.9,
+    "ignored_files": 0
+  },
+  "modules": [
+    {
+      "name": "tradingagents",
+      "path": "tradingagents/",
+      "type": "core",
+      "language": "python",
+      "entry_points": [
+        "tradingagents/default_config.py",
+        "tradingagents/graph/trading_graph.py"
+      ],
+      "interfaces": [
+        "TradingAgentsGraph class",
+        "AgentState management",
+        "Configuration system"
+      ],
+      "test_directories": [],
+      "config_files": [
+        "tradingagents/default_config.py"
+      ],
+      "scan_status": "partial",
+      "coverage_percentage": 45.0,
+      "key_components": [
+        "多智能体框架核心",
+        "图形处理引擎",
+        "配置管理系统"
+      ]
+    },
+    {
+      "name": "agents",
+      "path": "tradingagents/agents/",
+      "type": "module",
+      "language": "python",
+      "entry_points": [
+        "tradingagents/agents/__init__.py",
+        "tradingagents/agents/utils/agent_states.py"
+      ],
+      "interfaces": [
+        "智能体状态管理",
+        "工具抽象接口",
+        "记忆学习系统"
+      ],
+      "submodules": [
+        "analysts/",
+        "researchers/",
+        "risk_mgmt/",
+        "trader/",
+        "utils/",
+        "managers/"
+      ],
+      "test_directories": [],
+      "config_files": [],
+      "scan_status": "completed",
+      "coverage_percentage": 90.0,
+      "claude_md_created": true,
+      "key_components": [
+        "专业分析师团队",
+        "研究员辩论系统",
+        "风险管理机制",
+        "交易执行模块",
+        "记忆学习系统",
+        "管理决策层"
+      ]
+    },
+    {
+      "name": "dataflows",
+      "path": "tradingagents/dataflows/",
+      "type": "module",
+      "language": "python",
+      "entry_points": [
+        "tradingagents/dataflows/config.py",
+        "tradingagents/dataflows/interface.py"
+      ],
+      "interfaces": [
+        "数据供应商抽象接口",
+        "配置管理系统"
+      ],
+      "data_sources": [
+        "alpha_vantage.py",
+        "y_finance.py",
+        "openai.py",
+        "google.py",
+        "local.py"
+      ],
+      "test_directories": [],
+      "config_files": [
+        "tradingagents/dataflows/config.py"
+      ],
+      "scan_status": "partial",
+      "coverage_percentage": 25.0,
+      "key_components": [
+        "多数据源集成",
+        "API 调用抽象",
+        "缓存机制"
+      ]
+    },
+    {
+      "name": "graph",
+      "path": "tradingagents/graph/",
+      "type": "module",
+      "language": "python",
+      "entry_points": [
+        "tradingagents/graph/trading_graph.py",
+        "tradingagents/graph/setup.py"
+      ],
+      "interfaces": [
+        "TradingAgentsGraph 主类",
+        "图状态管理"
+      ],
+      "submodules": [
+        "conditional_logic.py",
+        "propagation.py",
+        "reflection.py",
+        "signal_processing.py"
+      ],
+      "test_directories": [],
+      "config_files": [],
+      "scan_status": "partial",
+      "coverage_percentage": 40.0,
+      "key_components": [
+        "LangGraph 集成",
+        "状态机管理",
+        "信号传播处理"
+      ]
+    },
+    {
+      "name": "cli",
+      "path": "cli/",
+      "type": "interface",
+      "language": "python",
+      "entry_points": [
+        "cli/main.py"
+      ],
+      "interfaces": [
+        "命令行界面",
+        "实时进度展示",
+        "交互式用户配置"
+      ],
+      "assets": [
+        "cli/static/welcome.txt"
+      ],
+      "dependencies": [
+        "rich",
+        "questionary",
+        "typer"
+      ],
+      "core_classes": [
+        "MessageBuffer",
+        "AnalystType"
+      ],
+      "test_directories": [],
+      "config_files": [],
+      "scan_status": "completed",
+      "coverage_percentage": 100.0,
+      "claude_md_created": true,
+      "key_components": [
+        "交互式CLI工具",
+        "Rich界面库集成",
+        "实时进度展示",
+        "多LLM提供商支持",
+        "用户输入验证",
+        "报告生成系统"
+      ]
+    }
+  ],
+  "scan_gaps": [
+    {
+      "category": "interface_definitions",
+      "missing_items": [
+        "数据流接口规范文档",
+        "配置参数完整说明",
+        "API调用详细规范"
+      ],
+      "priority": "high",
+      "recommended_scan": [
+        "tradingagents/dataflows/interface.py",
+        "tradingagents/default_config.py",
+        "tradingagents/graph/conditional_logic.py"
+      ]
+    },
+    {
+      "category": "data_models",
+      "missing_items": [
+        "交易决策数据结构",
+        "市场数据模式定义",
+        "图状态流转机制"
+      ],
+      "priority": "medium",
+      "recommended_scan": [
+        "tradingagents/graph/signal_processing.py",
+        "tradingagents/graph/propagation.py",
+        "cli/models.py"
+      ]
+    },
+    {
+      "category": "testing_strategy",
+      "missing_items": [
+        "测试目录结构分析",
+        "单元测试覆盖情况",
+        "集成测试方案"
+      ],
+      "priority": "medium",
+      "recommended_scan": [
+        "test.py",
+        "查找所有 *_test.py 文件",
+        "检查测试配置文件"
+      ]
+    }
+  ],
+  "ignored_patterns": [
+    "node_modules/**",
+    ".git/**",
+    ".github/**",
+    "dist/**",
+    "build/**",
+    "__pycache__/**",
+    "*.lock",
+    "*.log",
+    "*.bin",
+    "*.png",
+    "*.jpg",
+    "*.jpeg"
+  ],
+  "truncated": false,
+  "scan_limits_reached": false,
+  "next_scan_recommendations": [
+    "优先补扫数据流接口和配置模块",
+    "深入图形处理引擎机制分析",
+    "完善状态管理和流转机制文档",
+    "分析测试策略实现情况",
+    "补充集成和部署相关文档"
+  ],
+  "documentation_status": {
+    "root_claude_md": "created",
+    "module_claude_md_files": [
+      "cli/CLAUDE.md",
+      "tradingagents/agents/CLAUDE.md",
+      "tradingagents/agents/analysts/CLAUDE.md",
+      "tradingagents/agents/researchers/CLAUDE.md",
+      "tradingagents/agents/risk_mgmt/CLAUDE.md",
+      "tradingagents/agents/managers/CLAUDE.md",
+      "tradingagents/agents/trader/CLAUDE.md",
+      "tradingagents/agents/utils/CLAUDE.md"
+    ],
+    "coverage_reports": "agents模块完成100%覆盖，文档覆盖率显著提升",
+    "api_documentation": "partial"
+  },
+  "quality_metrics": {
+    "code_structure_score": 8.5,
+    "modularity_score": 9.0,
+    "documentation_coverage": 6.5,
+    "test_coverage_estimate": 2.0,
+    "overall_assessment": "优秀架构，智能体系统文档完成，CLI模块完整，需完善数据流和图形引擎文档"
+  },
+  "recent_updates": [
+    {
+      "timestamp": "2024-12-20T00:00:00Z",
+      "action": "completed_agents_documentation",
+      "description": "完成agents智能体系统完整文档创建，包含主模块和7个子模块详细文档",
+      "files_created": [
+        "tradingagents/agents/CLAUDE.md",
+        "tradingagents/agents/analysts/CLAUDE.md",
+        "tradingagents/agents/researchers/CLAUDE.md",
+        "tradingagents/agents/risk_mgmt/CLAUDE.md",
+        "tradingagents/agents/managers/CLAUDE.md",
+        "tradingagents/agents/trader/CLAUDE.md",
+        "tradingagents/agents/utils/CLAUDE.md"
+      ],
+      "impact": "documentation_coverage提升至6.5，agents模块覆盖率90%，完成核心智能体团队文档"
+    },
+    {
+      "timestamp": "2024-12-20T00:00:00Z",
+      "action": "completed_cli_documentation",
+      "description": "完成CLI模块详细文档创建，包含用户指南、技术实现和故障排除",
+      "files_created": [
+        "cli/CLAUDE.md"
+      ],
+      "impact": "CLI模块覆盖率100%"
+    }
+  ]
+}
